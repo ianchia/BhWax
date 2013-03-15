@@ -162,7 +162,14 @@ function BhWaxDemo:createYouTubeButton()
 	button:setPosition(w/2, h*0.75)
 	button:addEventListener(Event.MOUSE_UP, function(event)
 		if self:hitTestPoint(event.x, event.y) then
-			self:playVideo("http://www.youtube.com/watch?v=zu1lTI4AtE8", (w-500)/2, 600, 500, 500/1.66)
+
+			-- this URL format no longer works, and returns WebKit errors like:
+			-- "*** WebKit discarding exception: <NSRangeException> *** -[__NSCFString substringToIndex:]: Range or index out of bounds"		
+			-- self:playVideo("http://www.youtube.com/watch?v=zu1lTI4AtE8", (w-500)/2, 600, 500, 500/1.66)
+			-- amended URL format to work within Xcode 4.5 & iOS6+,
+			-- per https://devforums.apple.com/message/705665#705665
+			self:playVideo("http://www.youtube.com/v/zu1lTI4AtE8", (w-500)/2, 600, 500, 500/1.66)
+			
 			button:removeFromParent()
 		end
 	end)
@@ -170,18 +177,22 @@ function BhWaxDemo:createYouTubeButton()
 end
 
 function BhWaxDemo:playVideo(url, x, y, width, height)
-	local html = string.format("\
-    <html><head>\
-    <style type=\"text/css\">\
-    body {\
-    background-color: transparent;\
-    color: white;\
-    }\
-    </style>\
-    </head><body style=\"margin:0\">\
-    <embed id=\"yt\" src=\"%s\" type=\"application/x-shockwave-flash\" \
-    width=\"%0.0f\" height=\"%0.0f\"></embed>\
-    </body></html>", url, width, height)
+
+	-- altered to use Lua style multiline strings instead of using unwieldy backslashes
+	-- to escape all the double quote charaters in the HTML
+    local html = [[<html><head>
+				<style type="text/css">
+				body {
+				background-color: transparent;
+				color: white;
+				}
+				</style>
+				</head><body style="margin:0">
+				<embed id="yt" src="]].. url ..[[" type="application/x-shockwave-flash" 
+				width="]].. width 
+				..[[" height="]].. height
+				..[["></embed>
+				</body></html>]];
 	
 	local videoView=UIWebView:initWithFrame(CGRect(x, y, width, height))
 	videoView:loadHTMLString_baseURL(html, nil)
